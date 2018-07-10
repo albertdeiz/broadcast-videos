@@ -11,6 +11,6 @@
     "socket.io": "^2.1.1"
   },
   "scripts": {
-    "start": "node index.js"
+    "sockets": "babel-watch ./sockets --presets es2015"
   }
 }

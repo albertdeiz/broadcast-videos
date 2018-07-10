@@ -4,14 +4,14 @@ var app = express();
 var path = require('path');
 var server = require('http').createServer(app);
 var io = require('socket.io')(server);
-var port = process.env.PORT || 3000;
+var port = process.env.PORT || 4113;
 
 server.listen(port, () => {
   console.log('Server listening at port %d', port);
 });
 
 // Routing
-app.use(express.static(path.join(__dirname, 'public')));
+app.use(express.static(path.join(__dirname, '..', 'public')));
 
 // usernames which are currently connected to the chat
 var usernames = {};
@@ -20,6 +20,12 @@ var usernames = {};
 var rooms = ['room1','room2','room3'];
 
 io.sockets.on('connection', function (socket) {
+  socket.on('change color', (color) => {
+    // once we get a 'change color' event from one of our clients, we will send it to the rest of the clients
+    // we make use of the socket.emit method again with the argument given to use from the callback function above
+    console.log('Color Changed to: ', color)
+    io.sockets.emit('change color', color)
+  })
 
   // when the client emits 'adduser', this listens and executes
   socket.on('adduser', function(username){
