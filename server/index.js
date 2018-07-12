@@ -21,7 +21,6 @@ app.use(express.static(publicPath))
 
 io.on('connection', (socket) => {
 	console.log('New user connected')
-	socket.emit('updateRoomList', rooms.getRoomListName())
 
 	socket.on('join', (params, callback) => {
 		if (!isRealString(params.name) && !isRealString(params.room)) {
@@ -36,6 +35,7 @@ io.on('connection', (socket) => {
 		io.to(user.room).emit('updateUserList', users.getUserList(user.room))
 		socket.emit('newMessage', Message.generateMessage('Admin', 'Welcome to the chat App'))
 		socket.broadcast.to(user.room).emit('newMessage', Message.generateMessage('Admin', `${user.name} has joined.`))
+		socket.emit('updateRoomList', rooms.getRoomListName())
 		callback()
 	})
 
@@ -44,7 +44,7 @@ io.on('connection', (socket) => {
 			return callback(`Room ${roomName} already exist`)
 		}
 		const room = rooms.addRoom(roomName)
-		socket.emit('updateRoomList', rooms.getRoomListName(), room)
+		socket.broadcast.emit('updateRoomList', rooms.getRoomListName(), room)
 	})
 
 	socket.on('createMessage', (message, callback) =>  {

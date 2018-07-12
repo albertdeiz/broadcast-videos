@@ -55,6 +55,7 @@ socket.on('updateUserList', function (users) {
 });
 
 socket.on('updateRoomList', function (rooms, currentRoom) {
+	console.log('emmitted updateRoomList')
 	var ol = jQuery('<ol></ol>');
 	rooms.forEach(function (room) {
 		if (room === currentRoom) {
