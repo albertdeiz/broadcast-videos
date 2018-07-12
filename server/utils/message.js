@@ -1,27 +1,22 @@
-var moment = require('moment');
+import moment from 'moment'
 
-var generateMessage = (from, text) => {
-
+export const generateMessage = (from, text) => {
 	return {
-
 		from,
 		text,
 		createdAt: moment.valueOf()
-	};
-};
+	}
+}
 
-var generateLocationMessage = (from, lat, long) => {
+export const generateLocationMessage = (from, lat, long) => {
+	return {
+		from,
+		url: `https://google.com/maps?q=${lat},${long}`,
+		createdAt: moment.valueOf()
+	}
+}
 
-		return {
-
-			from,
-			url: `https://google.com/maps?q=${lat},${long}`,
-			createdAt: moment.valueOf()
-		};
-};
-
-module.exports = {
-
+export default {
 	generateMessage,
 	generateLocationMessage
-};
+}

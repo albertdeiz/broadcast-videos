@@ -1,9 +1,7 @@
-var isRealString = (str) => {
+export const isRealString = string => {
+	return typeof string === 'string' && string.trim().length > 0
+}
 
-	return typeof str === 'string' && str.trim().length > 0;
-};
-
-module.exports = {
-
+export default {
 	isRealString
-};
+}
