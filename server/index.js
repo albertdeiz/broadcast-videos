@@ -48,7 +48,7 @@ io.on('connection', (socket) => {
 			return callback('Room name does\'nt exist')
 		}
 		socket.join(roomId)
-		users.setRoom(user.id, room.id)
+		users.setRoom(user.id, room)
 		socket.emit('newMessage', Message.generateMessage('Admin', 'Welcome to the App'))
 		socket.broadcast.to(room.id).emit('newMessage', Message.generateMessage('Admin', `${user.name} has joined.`))
 		console.log('all users', users.users)

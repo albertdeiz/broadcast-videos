@@ -1,21 +1,34 @@
 import React, { Component } from 'react'
-import { Link } from 'react-router-dom'
 import socketIOClient from 'socket.io-client'
+import AppBar from './components/AppBar'
+import Broadcast from './components/Broadcast'
+import ListRooms from './components/ListRooms'
+import CreateForm from './components/CreateForm'
 
 // Making the App component
 class App extends Component {
-  constructor() {
-    super()
+  constructor(props) {
+    super(props)
     this.state = {
       socket: socketIOClient('http://localhost:4113'),
+      connected: false,
       auth: false,
       user: {},
-      username: '',
       rooms: []
     }
 
+    this.state.socket.on('connect', () => {
+      this.setState({connected: true})
+      console.log(`status: ${'online'}`)
+    })
+
     this.state.socket.on('updateRoomNames', rooms => {
       this.setState({rooms})
+    })
+
+    this.state.socket.on('disconnect', rooms => {
+      this.setState({connected: false})
+      console.log(`status: ${'offline'}`)
     })
   }
 
@@ -23,9 +36,10 @@ class App extends Component {
     this.setState({username: e.target.value})
   }
 
-  joinUser = e => {
-    e.preventDefault()
-    this.state.socket.emit('join', this.state.username, this.joinUserSuccess)
+  // User Methods
+
+  joinUser = username => {
+    this.state.socket.emit('join', username, this.joinUserSuccess)
   }
 
   joinUserSuccess = (err, user) => {
@@ -35,6 +49,8 @@ class App extends Component {
     }
     this.setState({user, auth: true, username: ''})
   }
+
+  // Room Methods
 
   joinRoom = roomId => e => {
     e.preventDefault()
@@ -54,64 +70,41 @@ class App extends Component {
     })
   }
 
+  createRoom = roomname => {
+    console.log('will create ' + roomname)
+  }
+
+  // render
+
   render() {
     return (
       <div className="container-fluid">
         <div className="row">
-          <div className="col-12">
-            <nav className="navbar navbar-expand-sm navbar-dark bg-dark">
-              <a className="navbar-brand">Navbar</a>
-              <button className="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNavAltMarkup" aria-controls="navbarNavAltMarkup" aria-expanded="false" aria-label="Toggle navigation">
-                <span className="navbar-toggler-icon"></span>
-              </button>
-              <div className="collapse navbar-collapse" id="navbarNavAltMarkup">
-                <div className="navbar-nav">
-                  <Link to="/" className="nav-item nav-link">Home</Link>
-                  <Link to="/room/100" className="nav-item nav-link">Room 100</Link>
-                </div>
-              </div>
-            </nav>
-          </div>
+          <AppBar isLogged={this.state.auth} user={this.state.user}/>
         </div>
         {!this.state.auth && (
-          <div className="row">
-            <div className="col-12">
-              <form>
-                <div className="form-row align-items-center">
-                  <div className="col-auto">
-                    <label className="sr-only" htmlFor="name">Username</label>
-                    <div className="input-group mb-2">
-                      <div className="input-group-prepend">
-                        <div className="input-group-text">@</div>
-                      </div>
-                      <input onChange={this.handleChange} type="text" className="form-control" id="name" placeholder="Username" value={this.state.username}/>
-                    </div>
-                  </div>
-                  <div className="col-auto">
-                    <button onClick={this.joinUser} type="submit" className="btn btn-primary mb-2">Crear</button>
-                  </div>
-                </div>
-              </form>
+          <div className="row justify-content-md-center" style={{marginTop: 30}}>
+            <div className="col-6">
+              <h2>Join the experience,<br />
+              <small className="text-muted">is easy!</small></h2>
+              <CreateForm onSubmit={this.joinUser} label="Username" prependLabel="@" buttonLabel="Join"/>
             </div>
           </div>
         )}
         {this.state.auth && (
           <div className="row">
-            <div className="col-12">
-              <h1>Hola, {this.state.user.name}</h1>
+            <div className="col-4">
+              <CreateForm onSubmit={this.createRoom} label="Room" prependLabel="#" buttonLabel="Create" pullRight={true}/>
+              {this.state.auth && (
+                <ListRooms rooms={this.state.rooms} onSelectRoom={this.joinRoom} activeRoom={this.state.user.room}/>
+              )}
+            </div>
+            <div className="col-8">
+              <Broadcast room={this.state.user.room}/>
             </div>
           </div>
         )}
-        <ul>
-          {this.state.rooms.map(room => (
-            <li key={room.id} onClick={this.joinRoom(room.id)}>
-              {(this.state.user.room && this.state.user.room.name === room.name) ?
-                <strong>{room.name} - {room.id}</strong>:
-                `${room.name} - ${room.id}`
-              }</li>
-          ))}
-        </ul>
-        {this.props.children}
+        {/* this.props.children */}
       </div>
     )
   }

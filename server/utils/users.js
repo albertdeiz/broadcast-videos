@@ -29,11 +29,11 @@ class Users {
 		return this.users.filter((user) => user.id === id)[0]
 	}
 
-	setRoom(id, roomId) {
+	setRoom(id, room) {
 		let userData
 		this.users.map((user) => {
 			if (user.id === id) {
-				user.roomId = roomId
+				user.room = room
 			}
 			return user
 		})
