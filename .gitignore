@@ -1,1 +1,13 @@
+<<<<<<< HEAD
 node_modules/
+=======
+# Packages
+node_modules/
+
+# Yarn
+yarn.lock
+yarn-error.log
+
+# npm
+package-lock.json
+>>>>>>> test
