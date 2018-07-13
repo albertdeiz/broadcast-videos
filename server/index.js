@@ -12,7 +12,7 @@ const app = express()
 const publicPath = path.join(__dirname, '../public')
 const server = http.createServer(app)
 const io = socketIO(server)
-const port = process.env.PORT || 3000
+const port = process.env.PORT || 4113
 
 const users = new Users()
 const rooms = new Rooms()
@@ -22,21 +22,31 @@ app.use(express.static(publicPath))
 io.on('connection', (socket) => {
 	console.log('New user connected')
 
-	socket.on('join', (params, callback) => {
-		if (!isRealString(params.name) && !isRealString(params.room)) {
-			return callback('Name and Room name are required')
+	socket.on('join', (userName, callback) => {
+		if (!isRealString(userName)) {
+			return callback('Name is required')
 		}
-		if (users.matchUser(params.name)) {
+		if (users.matchUser(userName)) {
 			return callback('Name is already taked')
 		}
-		socket.join(params.room)
 		users.removeUser(socket.id)
-		const user = users.addUser(socket.id, params.name, params.room)
-		io.to(user.room).emit('updateUserList', users.getUserList(user.room))
-		socket.emit('newMessage', Message.generateMessage('Admin', 'Welcome to the chat App'))
-		socket.broadcast.to(user.room).emit('newMessage', Message.generateMessage('Admin', `${user.name} has joined.`))
-		socket.emit('updateRoomList', rooms.getRoomListName())
-		callback()
+		const user = users.addUser(socket.id, userName)
+		console.log('new user', user)
+		console.log('all users', users.users)
+		callback(null, user)
+	})
+
+	socket.on('joinGroup', (groupName, callback) => {
+		const room = rooms.matchRoom(groupName)
+		const user = users.getUser(socket.id)
+		if (!room) {
+			return callback('Room name does\'nt exist')
+		}
+		socket.join(groupName)
+		users.setRoom(user.id, room.id)
+		socket.emit('newMessage', Message.generateMessage('Admin', 'Welcome to the App'))
+		socket.broadcast.to(room.id).emit('newMessage', Message.generateMessage('Admin', `${user.name} has joined.`))
+		callback(null, room)
 	})
 
 	socket.on('createRoom', (roomName, callback) => {
@@ -52,13 +62,11 @@ io.on('connection', (socket) => {
 		if (user && isRealString(message.text)) {
 			io.to(user.room).emit('newMessage', Message.generateMessage(user.name, message.text))
 		}
-		console.log('New Message', message)
 		callback()
 	})
 
 	socket.on('createLocationMessage', (coords) => {
 		const user = users.getUser(socket.id)
-		console.log(user)
 		if (user) {
 			io.to(user.room).emit('newLocationMessage', generateLocationMessage(user.name, coords.latitude, coords.longitude))	
 		}

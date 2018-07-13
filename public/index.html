@@ -44,15 +44,12 @@
 		jQuery('#room-form').on('submit', function (e) {
 			e.preventDefault();
 			var roomName = jQuery('[name=roomName]')
-			socket.emit('createRoom', 
-				roomName.val(),
-				function(err) {
-					if (err) {
-						alert(err)
-					}
-					roomName.val('')
+			socket.emit('createRoom', roomName.val(), err => {
+				if (err) {
+					alert(err)
 				}
-			);
+				roomName.val('')
+			});
 		});
 	</script>
 
