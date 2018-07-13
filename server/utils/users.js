@@ -7,7 +7,7 @@ class Users {
 		const user = {
 			id,
 			name,
-			roomId: null
+			room: null
 		}
 		this.users.push(user)
 		return user
@@ -31,13 +31,13 @@ class Users {
 
 	setRoom(id, roomId) {
 		let userData
-		users.map((user) => {
+		this.users.map((user) => {
 			if (user.id === id) {
 				user.roomId = roomId
 			}
 			return user
 		})
-	} 
+	}
 
 	getUserList (room) {
 		const users = this.users.filter((user) => {

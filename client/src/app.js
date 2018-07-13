@@ -10,8 +10,13 @@ class App extends Component {
       socket: socketIOClient('http://localhost:4113'),
       auth: false,
       user: {},
-      username: ''
+      username: '',
+      rooms: []
     }
+
+    this.state.socket.on('updateRoomNames', rooms => {
+      this.setState({rooms})
+    })
   }
 
   handleChange = e => {
@@ -24,12 +29,29 @@ class App extends Component {
   }
 
   joinUserSuccess = (err, user) => {
-    console.log(err, user)
     if (err) {
       console.log(err)
       return
     }
     this.setState({user, auth: true, username: ''})
+  }
+
+  joinRoom = roomId => e => {
+    e.preventDefault()
+    this.state.socket.emit('joinRoom', roomId, this.joinRoomSuccess)
+  }
+
+  joinRoomSuccess = (err, room) => {
+    if (err) {
+      console.log(err)
+      return
+    }
+    this.setState({
+      user: {
+        ...this.state.user,
+        room: room
+      }
+    })
   }
 
   render() {
@@ -76,11 +98,19 @@ class App extends Component {
         {this.state.auth && (
           <div className="row">
             <div className="col-12">
-              {this.state.user.name}
-              <button className="btn btn-primary">Crear Grupo</button>
+              <h1>Hola, {this.state.user.name}</h1>
             </div>
           </div>
         )}
+        <ul>
+          {this.state.rooms.map(room => (
+            <li key={room.id} onClick={this.joinRoom(room.id)}>
+              {(this.state.user.room && this.state.user.room.name === room.name) ?
+                <strong>{room.name} - {room.id}</strong>:
+                `${room.name} - ${room.id}`
+              }</li>
+          ))}
+        </ul>
         {this.props.children}
       </div>
     )
