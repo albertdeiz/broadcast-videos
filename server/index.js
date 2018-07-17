@@ -20,8 +20,6 @@ const rooms = new Rooms([{id: 9328, name: 'room 1'}, {id: 9322, name: 'room 2'}]
 app.use(express.static(publicPath))
 
 io.on('connection', (socket) => {
-	console.log('New user connected')
-
 	socket.emit('updateRoomNames', rooms.rooms)
 
 	socket.on('join', (userName, callback) => {
@@ -33,8 +31,6 @@ io.on('connection', (socket) => {
 		}
 		users.removeUser(socket.id)
 		const user = users.addUser(socket.id, userName)
-		console.log('new user', user)
-		console.log('all users', users.users)
 		return callback(null, user)
 	})
 
@@ -49,43 +45,57 @@ io.on('connection', (socket) => {
 		}
 		socket.join(roomId)
 		users.setRoom(user.id, room)
-		socket.emit('newMessage', Message.generateMessage('Admin', 'Welcome to the App'))
+		socket.emit('newMessage', Message.generateMessage('Admin', 'Welcome to Room #' + room.name))
 		socket.broadcast.to(room.id).emit('newMessage', Message.generateMessage('Admin', `${user.name} has joined.`))
-		console.log('all users', users.users)
 		return callback(null, room)
 	})
 
 	socket.on('createRoom', (roomName, callback) => {
+		const user = users.getUser(socket.id)
+		if (!user) {
+			return callback('You have to be logged')
+		}
 		if (rooms.matchRoom(roomName)) {
 			return callback(`Room ${roomName} already exist`)
 		}
-		const room = rooms.addRoom(roomName)
-		socket.emit('updateRoomList', rooms.rooms)
+		const newRoom = rooms.addRoom(roomName)
 		socket.broadcast.emit('updateRoomList', rooms.rooms)
+		return callback(null, newRoom)
 	})
 
 	socket.on('createMessage', (message, callback) =>  {
 		const user = users.getUser(socket.id)
-		if (user && isRealString(message.text)) {
-			io.to(user.room).emit('newMessage', Message.generateMessage(user.name, message.text))
+		if (!user) {
+			return callback('You have to be logged')
 		}
-		callback()
+		if (!isRealString(message)) {
+			return callback('message format does\'nt correct')
+		}
+		const newMessage = Message.generateMessage(user.name, message)
+		socket.broadcast.to(user.room.id).emit('newMessage', newMessage)
+		return callback(null, newMessage)
 	})
 
 	socket.on('createLocationMessage', (coords) => {
 		const user = users.getUser(socket.id)
 		if (user) {
-			io.to(user.room).emit('newLocationMessage', generateLocationMessage(user.name, coords.latitude, coords.longitude))	
+			socket.broadcast.to(user.room.id).emit('newLocationMessage', Message.generateLocationMessage(user.name, coords.latitude, coords.longitude))	
+		}
+	})
+
+	socket.on('createVideoMessage', (video) => {
+		const user = users.getUser(socket.id)
+		if (user) {
+			socket.broadcast.to(user.room.id).emit('newVideoMessage', Message.generateVideoMessage(user.name, video))	
 		}
 	})
 
 	socket.on('disconnect', () => {
 		const user = users.removeUser(socket.id)
-		if (user) {
-			io.to(user.room).emit('updateUserList', users.getUserList(user.room))
-			io.to(user.room).emit('newMessage', Message.generateMessage('Admin', `${user.name} has left the chat room.`))
+		if (user && user.room) {
+			socket.broadcast.to(user.room.id).emit('newMessage', Message.generateMessage('Admin', `${user.name} was disconnected.`))
+			console.log(user.name + ' Disconnected')
 		}
-		console.log('User Disconnected')
 	})	
 })
 

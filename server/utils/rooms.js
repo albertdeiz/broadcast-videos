@@ -34,7 +34,6 @@ class Rooms {
 		const namesArray = this.rooms.map((room) => {
 			return room.name
 		})
-		console.log('rooms', namesArray)
 		return namesArray
 	}
 }

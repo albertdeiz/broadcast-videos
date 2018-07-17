@@ -16,7 +16,17 @@ export const generateLocationMessage = (from, lat, long) => {
 	}
 }
 
+export const generateVideoMessage = (from, video) => {
+	return Object.assign({}, video, {
+		message: {
+			from,
+			createdAt: moment.valueOf()
+		}
+	})
+}
+
 export default {
 	generateMessage,
-	generateLocationMessage
+	generateLocationMessage,
+	generateVideoMessage
 }

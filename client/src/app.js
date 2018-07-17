@@ -2,15 +2,17 @@ import React, { Component } from 'react'
 import socketIOClient from 'socket.io-client'
 import AppBar from './components/AppBar'
 import Broadcast from './components/Broadcast'
+import MobileBroadcast from './components/MobileBroadcast'
 import ListRooms from './components/ListRooms'
 import CreateForm from './components/CreateForm'
+import { BrowserView, MobileView } from 'react-device-detect'
 
 // Making the App component
 class App extends Component {
   constructor(props) {
     super(props)
     this.state = {
-      socket: socketIOClient('http://localhost:4113'),
+      socket: socketIOClient('192.168.0.13:4113'),
       connected: false,
       auth: false,
       user: {},
@@ -19,7 +21,6 @@ class App extends Component {
 
     this.state.socket.on('connect', () => {
       this.setState({connected: true})
-      console.log(`status: ${'online'}`)
     })
 
     this.state.socket.on('updateRoomNames', rooms => {
@@ -27,8 +28,11 @@ class App extends Component {
     })
 
     this.state.socket.on('disconnect', rooms => {
-      this.setState({connected: false})
-      console.log(`status: ${'offline'}`)
+      this.setState({
+        connected: false,
+        auth: false,
+        user: {}
+      })
     })
   }
 
@@ -44,7 +48,7 @@ class App extends Component {
 
   joinUserSuccess = (err, user) => {
     if (err) {
-      console.log(err)
+      alert(`error joining user: ${err}`)
       return
     }
     this.setState({user, auth: true, username: ''})
@@ -59,7 +63,7 @@ class App extends Component {
 
   joinRoomSuccess = (err, room) => {
     if (err) {
-      console.log(err)
+      alert(`error joining room: ${err}`)
       return
     }
     this.setState({
@@ -84,23 +88,29 @@ class App extends Component {
         </div>
         {!this.state.auth && (
           <div className="row justify-content-md-center" style={{marginTop: 30}}>
-            <div className="col-6">
+            <div className="col-md-6 col-sm-12">
               <h2>Join the experience,<br />
-              <small className="text-muted">is easy!</small></h2>
+              <small className="text-muted">is easy!</small><br />
+              <small className="text-muted">you are {this.state.connected ? 'online' : 'offline'}</small></h2>
               <CreateForm onSubmit={this.joinUser} label="Username" prependLabel="@" buttonLabel="Join"/>
             </div>
           </div>
         )}
         {this.state.auth && (
           <div className="row">
-            <div className="col-4">
+            <div className="col-md-4 col-sm-12">
               <CreateForm onSubmit={this.createRoom} label="Room" prependLabel="#" buttonLabel="Create" pullRight={true}/>
               {this.state.auth && (
                 <ListRooms rooms={this.state.rooms} onSelectRoom={this.joinRoom} activeRoom={this.state.user.room}/>
               )}
             </div>
-            <div className="col-8">
-              <Broadcast room={this.state.user.room}/>
+            <div className="col-md-8 col-sm-12">
+              <BrowserView>
+                <Broadcast room={this.state.user.room} socket={this.state.socket}/>
+              </BrowserView>
+              <MobileView>
+                <MobileBroadcast room={this.state.user.room} socket={this.state.socket}/>
+              </MobileView>
             </div>
           </div>
         )}
