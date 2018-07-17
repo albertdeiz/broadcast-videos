@@ -12,7 +12,7 @@ class App extends Component {
   constructor(props) {
     super(props)
     this.state = {
-      socket: socketIOClient('192.168.0.13:4113'),
+      socket: socketIOClient(`${process.env.REACT_APP_SOCKETS_URL}:${process.env.REACT_APP_SOCKETS_PORT}`),
       connected: false,
       auth: false,
       user: {},

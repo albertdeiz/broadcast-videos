@@ -50,7 +50,7 @@ class MobileBroadcast extends Component {
       this.setState({
         timeout: setTimeout(() => {
           youtubeSearch(
-            'AIzaSyBzCJpPBMHmQn1ZAIl5M7lOrnb0gZinbn4', 
+            process.env.REACT_APP_YOUTUBE_APP_KEY, 
             {
               q: this.state.q,
               part:'snippet',
