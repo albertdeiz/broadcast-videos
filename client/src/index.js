@@ -5,3 +5,4 @@ import registerServiceWorker from './registerServiceWorker';
 
 ReactDOM.render(<Routes />, document.getElementById('root'));
 registerServiceWorker();
+console.log(process.env)
