@@ -5,7 +5,7 @@ import { Link } from 'react-router-dom'
 class AppBar extends Component {
   render() {
     const { isLogged, user } = this.props 
-    let username = isLogged ? user.name: 'Guest'
+    let username = isLogged ? user.username: 'Guest'
     return (
       <nav className="col-12 navbar navbar-light bg-light">
         <a className="navbar-brand">Hi, {username}!</a>

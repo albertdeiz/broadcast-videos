@@ -43,7 +43,7 @@ class App extends Component {
   // User Methods
 
   joinUser = user => {
-    this.state.socket.emit('join', user.username, this.joinUserSuccess)
+    this.state.socket.emit('join', user, this.joinUserSuccess)
   }
 
   joinUserSuccess = (err, user) => {
@@ -51,7 +51,11 @@ class App extends Component {
       alert(`error joining user: ${err}`)
       return
     }
-    this.setState({user, auth: true, username: ''})
+    this.setState({
+      user,
+      auth: true,
+      username: ''
+    })
   }
 
   // Room Methods
