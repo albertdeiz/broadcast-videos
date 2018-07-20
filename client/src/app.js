@@ -42,8 +42,8 @@ class App extends Component {
 
   // User Methods
 
-  joinUser = username => {
-    this.state.socket.emit('join', username, this.joinUserSuccess)
+  joinUser = user => {
+    this.state.socket.emit('join', user.username, this.joinUserSuccess)
   }
 
   joinUserSuccess = (err, user) => {
@@ -92,14 +92,33 @@ class App extends Component {
               <h2>Join the experience,<br />
               <small className="text-muted">is easy!</small><br />
               <small className="text-muted">you are {this.state.connected ? 'online' : 'offline'}</small></h2>
-              <CreateForm onSubmit={this.joinUser} label="Username" prependLabel="@" buttonLabel="Join"/>
+              <CreateForm
+                onSubmit={this.joinUser}
+                labels={[{
+                  name: 'username',
+                  description: 'Username',
+                  prepend: '@'
+                },
+                {
+                  name: 'password',
+                  description: 'Password',
+                  type: 'password'
+                }]}
+                buttonLabel="Join"/>
             </div>
           </div>
         )}
         {this.state.auth && (
           <div className="row">
             <div className="col-md-4 col-sm-12">
-              <CreateForm onSubmit={this.createRoom} label="Room" prependLabel="#" buttonLabel="Create" pullRight={true}/>
+              <CreateForm
+                onSubmit={this.createRoom}
+                labels={[{
+                  name: 'room',
+                  description: 'Room',
+                  prepend: '#'
+                }]}
+                buttonLabel="Create" pullRight={true}/>
               {this.state.auth && (
                 <ListRooms rooms={this.state.rooms} onSelectRoom={this.joinRoom} activeRoom={this.state.user.room}/>
               )}
