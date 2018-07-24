@@ -58,12 +58,13 @@ class App extends Component {
   componentWillMount() {
     const token = window.localStorage.getItem('token-app')
     if (token) {
-      this.state.socket.emit('token', {token, data: null}, (err, user) => {
+      this.state.socket.emit('token', {token, data: null}, (err, user, room) => {
         if (!err) {
           this.setState({
             token,
             auth: true,
-            user
+            user,
+            currentRoom: room
           })
         } else {
           console.log('error on token ', err)
@@ -112,11 +113,15 @@ class App extends Component {
     if (err) {
       alert(`error joining room: ${err}`)
       return
+    } else {
+      this.setState({
+        currentRoom: room,
+        user: {
+          ...this.state.user,
+          roomId: room.id
+        }
+      })
     }
-
-    this.setState({
-      currentRoom: room
-    })
   }
 
   createRoom = roomname => {

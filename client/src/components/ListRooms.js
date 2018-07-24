@@ -4,7 +4,7 @@ import classnames from 'classnames'
 
 class ListRooms extends Component {
   renderItem(room) {
-    const isActive = this.props.activeRoom && this.props.activeRoom.name === room.name
+    const isActive = this.props.activeRoom && this.props.activeRoom === room.id
     return (
       <li
         key={room.id}
@@ -15,6 +15,7 @@ class ListRooms extends Component {
     )
   }
   render() {
+    console.log(this.props)
     return (
       <ul className="list-group">
         {this.props.rooms.map(room => this.renderItem(room))}

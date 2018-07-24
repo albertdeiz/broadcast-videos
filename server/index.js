@@ -28,7 +28,8 @@ io.on('connection', (socket) => {
 				if (err) {
 					throw(err)
 				} else {
-					return callback(null, user.data)
+					const room = rooms.getRoom(user.data.roomId)
+					return callback(null, user.data, room)
 				}
 			})
 		} catch (e) {
