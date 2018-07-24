@@ -15,36 +15,70 @@ const io = socketIO(server)
 const port = process.env.PORT || 4113
 
 const users = new Users([{id: 1, username: 'aado29', password: '21367773'}])
-const rooms = new Rooms([{id: 9328, name: 'room 1'}, {id: 9322, name: 'room 2'}])
+const rooms = new Rooms(['room 1', 'room 2'])
 
 app.use(express.static(publicPath))
 
 io.on('connection', (socket) => {
-	socket.emit('updateRoomNames', rooms.rooms)
+	socket.emit('updateRoomNames', rooms.list)
+
+	socket.on('token', ({token}, callback) => {
+		try {
+			users.getUserByToken(token, (err, user) => {
+				if (err) {
+					throw(err)
+				} else {
+					return callback(null, user.data)
+				}
+			})
+		} catch (e) {
+			return callback(e)
+		}
+	})
 
 	socket.on('join', (user, callback) => {
-		users.login(user.username, user.password, (err, user) => {
+		users.login(user.username, user.password, (err, data) => {
 			if (err) {
 				callback(err)
 			} else {
-				user.setSocket(socket.id)
-				return callback(null, user.data)
+				return callback(null, data.user.data, data.token)
 			}
 		})
 	})
 
-	socket.on('joinRoom', (roomId, callback) => {
-		users.getUserBySocket(socket.id, (err, user) => {
-			if (!err) {
-				return callback(err)
-			} else {
-				socket.join(roomId)
-				user.set('roomId', roomId)
-				socket.emit('newMessage', Message.generateMessage('Admin', 'Welcome to Room'))
-				socket.broadcast.to(roomId).emit('newMessage', Message.generateMessage('Admin', `${user.data.username} has joined.`))
-				return callback(null, rooms.getRoom(roomId))
-			}
-		})
+	socket.on('joinRoom', ({token, data}, callback) => {
+		try {
+			users.getUserByToken(token, (err, user) => {
+				if (err) {
+					throw(err)
+				} else {
+					socket.join(data.roomId)
+					user.set('roomId', data.roomId)
+					socket.emit('newMessage', Message.generateMessage('Admin', 'Welcome to Room'))
+					socket.broadcast.to(data.roomId).emit('newMessage', Message.generateMessage('Admin', `${user.data.username} has joined.`))
+					return callback(null, rooms.getRoom(data.roomId))
+				}
+			})
+		} catch (e) {
+			return callback(e)
+		}
+	})
+
+	socket.on('playlist:add', ({token, data}, callback) => {
+		try {
+			users.getUserByToken(token, (err, user) => {
+				if (err) {
+					throw(err)
+				} else {
+					const room = rooms.getRoom(user.data.roomId)
+					const playlist = room.addToPlaylist(data.item)
+					socket.broadcast.to(user.data.roomId).emit('playlist:add', playlist)	
+					return callback(null, playlist)
+				}
+			})
+		} catch (e) {
+			return callback(e)
+		}
 	})
 
 	// socket.on('createRoom', (roomName, callback) => {
@@ -85,23 +119,7 @@ io.on('connection', (socket) => {
 	// 	if (user) {
 	// 		socket.broadcast.to(user.room.id).emit('newVideoMessage', Message.generateVideoMessage(user.name, video))	
 	// 	}
-	// })
-
-	socket.on('disconnect', () => {
-		users.getUserBySocket(socket.id, (err, user) => {
-			if (!err) {
-				const removeSocket = user.removeSocket(socket.id)
-				if (removeSocket) {
-					const roomId = user.roomId
-					if (roomId) {
-						const room = rooms.getRoom(roomId)
-						socket.broadcast.to(room.id).emit('newMessage', Message.generateMessage('Admin', `${user.username} was disconnected.`))
-					}
-					console.log(user.data.username + ' Socket disconnected')
-				}
-			}
-		})
-	})	
+	// })	
 })
 
 server.listen(port, () => {

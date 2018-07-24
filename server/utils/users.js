@@ -1,10 +1,12 @@
 import User from './user'
+import jwt from 'jwt-simple'
+const secret = 'secretphrase'
 
 class Users {
-	constructor(defaultsUser) {
+	constructor(initialStoge) {
 		this.users = []
-		if (typeof defaultsUser === 'object') {
-			defaultsUser.forEach(user => {
+		if (typeof initialStoge === 'object') {
+			initialStoge.forEach(user => {
 				try {
 					const newUser = new User(user)
 					this.addUser(newUser)
@@ -24,7 +26,10 @@ class Users {
 			}
 		})
 		if (userData !== null) {
-			return callback(null, userData)
+			return callback(null, {
+				user: userData,
+				token: jwt.encode(userData.data, secret)
+			})
 		} else {
 			try {
 				const newUser = new User({
@@ -33,7 +38,10 @@ class Users {
 					password
 				})
 				this.addUser(newUser)
-				return callback(null, newUser)
+				return callback(null, {
+					user: newUser,
+					token: jwt.encode(newUser.data, secret)
+				})
 			} catch (e) {
 				return callback(e)
 			}
@@ -45,15 +53,28 @@ class Users {
 		this.currentId++
 	}
 
-	getUserBySocket(socketId, callback) {
+	getUserById(id, callback) {
 		this.users.forEach(user => {
-			user.sockets.forEach(socket => {
-				if (socket === socketId) {
+			if (user.data.id === id) {
+				return callback(null, user)
+			}
+		})
+		return callback('user not found')
+	}
+
+	getUserByToken(token, callback) {
+		try {
+			const payload = jwt.decode(token, secret)
+			this.getUserById(payload.id, (err, user) => {
+				if (err) {
+					throw(err)
+				} else {
 					return callback(null, user)
 				}
 			})
-		})
-		return callback('user not found')
+		} catch (e) {
+			return callback(e)
+		}
 	}
 
 	// matchUser(name) {

@@ -5,7 +5,17 @@ import Broadcast from './components/Broadcast'
 import MobileBroadcast from './components/MobileBroadcast'
 import ListRooms from './components/ListRooms'
 import CreateForm from './components/CreateForm'
+import YoutubePlayer from './components/YoutubePlayer'
 import { BrowserView, MobileView } from 'react-device-detect'
+import QRCode from 'qrcode'
+// QRCode.toDataURL('I am a pony!')
+//   .then(url => {
+//     console.log(url)
+//   })
+//   .catch(err => {
+//     console.error(err)
+//   })
+// https://www.npmjs.com/package/qrcode
 
 // Making the App component
 class App extends Component {
@@ -16,7 +26,9 @@ class App extends Component {
       connected: false,
       auth: false,
       user: {},
-      rooms: []
+      rooms: [],
+      currentRoom: null,
+      token: null
     }
 
     this.state.socket.on('connect', () => {
@@ -27,13 +39,37 @@ class App extends Component {
       this.setState({rooms})
     })
 
-    this.state.socket.on('disconnect', rooms => {
+    this.state.socket.on('playlist:add', playlist => {
       this.setState({
-        connected: false,
-        auth: false,
-        user: {}
+        currentRoom: {
+          ...this.state.currentRoom,
+          playlist
+        }
       })
     })
+
+    this.state.socket.on('disconnect', rooms => {
+      this.setState({
+        connected: false
+      })
+    })
+  }
+
+  componentWillMount() {
+    const token = window.localStorage.getItem('token-app')
+    if (token) {
+      this.state.socket.emit('token', {token, data: null}, (err, user) => {
+        if (!err) {
+          this.setState({
+            token,
+            auth: true,
+            user
+          })
+        } else {
+          console.log('error on token ', err)
+        }
+      })
+    }
   }
 
   handleChange = e => {
@@ -46,23 +82,30 @@ class App extends Component {
     this.state.socket.emit('join', user, this.joinUserSuccess)
   }
 
-  joinUserSuccess = (err, user) => {
+  joinUserSuccess = (err, data, token) => {
     if (err) {
       alert(`error joining user: ${err}`)
       return
     }
     this.setState({
-      user,
+      user: data,
+      token,
       auth: true,
       username: ''
     })
+    window.localStorage.setItem('token-app', token)
   }
 
   // Room Methods
 
   joinRoom = roomId => e => {
     e.preventDefault()
-    this.state.socket.emit('joinRoom', roomId, this.joinRoomSuccess)
+    this.state.socket.emit('joinRoom', {
+      token: this.state.token,
+      data: {
+        roomId
+      }
+    }, this.joinRoomSuccess)
   }
 
   joinRoomSuccess = (err, room) => {
@@ -70,19 +113,15 @@ class App extends Component {
       alert(`error joining room: ${err}`)
       return
     }
+
     this.setState({
-      user: {
-        ...this.state.user,
-        room: room
-      }
+      currentRoom: room
     })
   }
 
   createRoom = roomname => {
     console.log('will create ' + roomname)
   }
-
-  // render
 
   render() {
     return (
@@ -124,16 +163,21 @@ class App extends Component {
                 }]}
                 buttonLabel="Create" pullRight={true}/>
               {this.state.auth && (
-                <ListRooms rooms={this.state.rooms} onSelectRoom={this.joinRoom} activeRoom={this.state.user.room}/>
+                <ListRooms rooms={this.state.rooms} onSelectRoom={this.joinRoom} activeRoom={this.state.user.roomId}/>
               )}
             </div>
             <div className="col-md-8 col-sm-12">
-              <BrowserView>
-                <Broadcast room={this.state.user.room} socket={this.state.socket}/>
-              </BrowserView>
-              <MobileView>
-                <MobileBroadcast room={this.state.user.room} socket={this.state.socket}/>
-              </MobileView>
+              {this.state.currentRoom && (
+                <BrowserView>
+                  <h1>{this.state.currentRoom.name}</h1>
+                  <YoutubePlayer playlist={this.state.currentRoom.playlist}/>
+                </BrowserView>
+              )}
+              {this.state.currentRoom && (
+                <MobileView>
+                  <MobileBroadcast token={this.state.token} room={this.state.currentRoom} socket={this.state.socket}/>
+                </MobileView>
+              )}
             </div>
           </div>
         )}

@@ -12,12 +12,6 @@ class MobileBroadcast extends Component {
       q: '',
       timeout: null
     }
-
-    this.props.socket.on('newMessage', message => {
-      this.setState({
-        messages: [...this.state.messages, message]
-      })
-    })
   }
 
   componentWillUpdate(nextProps, nextState) {
@@ -29,12 +23,16 @@ class MobileBroadcast extends Component {
 
   handleSendVideo = item => e => {
     e.preventDefault()
-    this.props.socket.emit('createVideoMessage', item, this.sendVideoSuccess)
+    if (window.confirm('Are you sure you want to add this item?', item))
+    this.props.socket.emit('playlist:add', {
+      token: this.props.token,
+      data: {item}
+    }, this.sendVideoSuccess)
   }
 
-  sendVideoSuccess = (err, message) => {
+  sendVideoSuccess = (err, playlist) => {
     if (err) {
-      alert(`error sending message: ${err}`)
+      alert('error sending message:', JSON.stringify(err))
       return
     }
   }
