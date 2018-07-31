@@ -1,7 +1,7 @@
 import React from "react"
-import App from "./app"
+import Root from "./root"
 import {
-  BrowserRouter as Router,
+  BrowserRouter,
   Route,
   Switch
 } from "react-router-dom"
@@ -9,15 +9,15 @@ import Home from './views/home'
 import Room from './views/room'
 
 const Routes = () => (
-  <Router>
-    <App>
+  <BrowserRouter>
+    <Root>
       <Switch>
         <Route path="/" exact component={Home} />
-        <Route path="/room/:id" exact component={Room} />
+        <Route path="/room/:id" exact component={Room}/>
         <Route component={NoMatch} />
       </Switch>
-    </App>
-  </Router>
+    </Root>
+  </BrowserRouter>
 )
 
 const NoMatch = ({ location }) => (

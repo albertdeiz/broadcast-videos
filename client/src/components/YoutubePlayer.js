@@ -62,7 +62,7 @@ class YoutubePlayer extends Component {
           <ul>
             {playlist.map((item, index) => (<li key={index}>
               <a onClick={this.handleClickItem(index)}>
-                <img src={item.snippet.thumbnails.default.url} title={item.snippet.title}/>
+                <img src={item.snippet.thumbnails.default.url} alt={item.snippet.title} title={item.snippet.title}/>
                 {item.snippet.title}
               </a>
             </li>))}

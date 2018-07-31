@@ -37,7 +37,13 @@ class Rooms {
 	}
 
 	getRoom(id) {
-		return this.list.filter((room) => room.id === id)[0]
+		let dataRoom = null
+		this.list.forEach(room => {
+			if (room.id == id) {
+				dataRoom = room
+			}
+		})
+		return dataRoom
 	}
 }
 

@@ -15,7 +15,7 @@ const io = socketIO(server)
 const port = process.env.PORT || 4113
 
 const users = new Users([{id: 1, username: 'aado29', password: '21367773'}])
-const rooms = new Rooms(['room 1', 'room 2'])
+const rooms = new Rooms(['room 1', 'room 2', 'room 3'])
 
 app.use(express.static(publicPath))
 
@@ -53,11 +53,15 @@ io.on('connection', (socket) => {
 				if (err) {
 					throw(err)
 				} else {
+					const room = rooms.getRoom(data.roomId)
+					if (!room) {
+						throw('room doesn\'t exist')
+					}
 					socket.join(data.roomId)
 					user.set('roomId', data.roomId)
 					socket.emit('newMessage', Message.generateMessage('Admin', 'Welcome to Room'))
 					socket.broadcast.to(data.roomId).emit('newMessage', Message.generateMessage('Admin', `${user.data.username} has joined.`))
-					return callback(null, rooms.getRoom(data.roomId))
+					return callback(null, room)
 				}
 			})
 		} catch (e) {
