@@ -1,5 +1,9 @@
 import React, { Component } from 'react'
 import { connect } from 'react-redux'
+import YoutubePlayer from './../components/YoutubePlayer'
+import MobileBroadcast from './../components/MobileBroadcast'
+import Playlist from './../components/Playlist'
+import { BrowserView, MobileView } from 'react-device-detect'
 
 class Room extends Component {
   constructor(props) {
@@ -16,6 +20,15 @@ class Room extends Component {
         }
       })
     })
+
+    this.props.socket.on('playlist:setIndex', newIndex => {
+      this.setState({
+        room: {
+          ...this.state.room,
+          indexPlaylist: newIndex
+        }
+      })
+    })
   }
 
   componentWillMount() {
@@ -23,6 +36,10 @@ class Room extends Component {
     if (auth.token) {
       this.joinRoom(match.params.id)
     }
+
+    this.props.socket.on('newMessage', message => {
+      console.log(message)
+    })
   }
 
   componentDidUpdate(prevProps, prevState) {
@@ -33,28 +50,81 @@ class Room extends Component {
   }
 
   joinRoom = (roomId, callback) => {
+    const { auth, socket, history } = this.props
     const data = {
-      token: this.props.auth.token,
+      token: auth.token,
       data: { roomId }
     }
-    this.props.socket.emit('joinRoom', data, (err, room) => {
+    socket.emit('joinRoom', data, (err, room) => {
       if (err) {
-        this.props.history.push('/')
+        history.push('/')
       } else {
         this.setState({room})
       }
     })
   }
 
+  setNextVideo = () => {
+    const { room } = this.state
+    const { playlist, indexPlaylist } = room
+    if (playlist[indexPlaylist + 1]) {
+      this.setIndexPlaylist(indexPlaylist + 1)
+      return true
+    }
+    return false
+  }
+
+  setIndexPlaylist = index => {
+    const { auth, socket } = this.props
+    const data = {
+      token: auth.token,
+      data: { indexPlaylist: index }
+    }
+    socket.emit('playlist:setIndex', data, (err, newIndex) => {
+      if (err) {
+        console.log(err)
+      } else {
+        this.setState({
+          room: {
+            ...this.state.room,
+            indexPlaylist: newIndex
+          }
+        })
+      }
+    })
+  }
+
   render() {
     const { room } = this.state
-    return (
-      <div className="row">
-        <div className="col-12">
-          <h1>Room {room ? room.name : ''}</h1>
+    const { auth, socket } = this.props
+    if (room) {
+      return (
+        <div className="row">
+          <div className="col-12">
+            <h1>Room {room ? room.name : ''}</h1>
+          </div>
+          <div className="col-12">
+            <Playlist list={room.playlist} onClickItem={this.setIndexPlaylist}/>
+          </div>
+          <div className="col-12">
+            <BrowserView>
+              <YoutubePlayer playlist={room.playlist} indexPlaylist={room.indexPlaylist} onVideoEnd={this.setNextVideo}/>
+            </BrowserView>
+            <MobileView>
+              <MobileBroadcast token={auth.token} room={room} socket={socket}/>
+            </MobileView>
+          </div>
         </div>
-      </div>
-    )
+      )
+    } else {
+      return (
+        <div className="row">
+          <div className="col-12">
+            <h1>Cargando...</h1>
+          </div>
+        </div>
+      )
+    }
   }
 }
 

@@ -1,5 +1,6 @@
 import React, { Component } from 'react'
 import Proptypes from 'prop-types'
+import Playlist from './Playlist'
 import youtubeSearch from 'youtube-api-v3-search'
 
 class MobileBroadcast extends Component {
@@ -68,14 +69,8 @@ class MobileBroadcast extends Component {
   render() {
     const { room } = this.props
     return (
-      <div className="jumbotron jumbotron-fluid">
-        {!room && (
-          <div className="container">
-            <h1 className="display-4">Select Room</h1>
-            <p className="lead">You have to select a room to join a funny experience</p>
-          </div>
-        )}
-        {room && (
+      <React.Fragment>
+        <div className="jumbotron jumbotron-fluid">
           <div>
             <form className="form-inline col-12">
               <div className="form-group mx-sm-3 mb-2">
@@ -91,8 +86,8 @@ class MobileBroadcast extends Component {
               })}
             </ul>
           </div>
-        )}
-      </div>
+        </div>
+      </React.Fragment>
     )
   }
 }

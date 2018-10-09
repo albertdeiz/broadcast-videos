@@ -1,9 +1,6 @@
 import React, { Component } from 'react'
 import { connect } from 'react-redux'
-import MobileBroadcast from './../components/MobileBroadcast'
 import CreateForm from './../components/CreateForm'
-import YoutubePlayer from './../components/YoutubePlayer'
-import { BrowserView, MobileView } from 'react-device-detect'
 import { join } from './../actions/auth'
 
 class Home extends Component {
@@ -61,19 +58,6 @@ class Home extends Component {
                 prepend: '#'
               }]}
               buttonLabel="Create" pullRight={true}/>
-          </div>
-          <div className="col-md-8 col-sm-12">
-            {this.state.currentRoom && (
-              <BrowserView>
-                <h1>{this.state.currentRoom.name}</h1>
-                <YoutubePlayer playlist={this.state.currentRoom.playlist}/>
-              </BrowserView>
-            )}
-            {this.state.currentRoom && (
-              <MobileView>
-                <MobileBroadcast token={this.state.token} room={this.state.currentRoom} socket={this.props.socket}/>
-              </MobileView>
-            )}
           </div>
         </div>
       )

@@ -77,8 +77,27 @@ io.on('connection', (socket) => {
 				} else {
 					const room = rooms.getRoom(user.data.roomId)
 					const playlist = room.addToPlaylist(data.item)
+					socket.emit('playlist:add', playlist)
 					socket.broadcast.to(user.data.roomId).emit('playlist:add', playlist)	
 					return callback(null, playlist)
+				}
+			})
+		} catch (e) {
+			return callback(e)
+		}
+	})
+
+	socket.on('playlist:setIndex', ({token, data}, callback) => {
+		try {
+			users.getUserByToken(token, (err, user) => {
+				if (err) {
+					throw(err)
+				} else {
+					const room = rooms.getRoom(user.data.roomId)
+					const newIndex = room.setIndexList(data.indexPlaylist)
+					socket.emit('playlist:setIndex', newIndex)
+					socket.broadcast.to(user.data.roomId).emit('playlist:setIndex', newIndex)	
+					return callback(null, newIndex)
 				}
 			})
 		} catch (e) {

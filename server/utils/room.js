@@ -4,6 +4,7 @@ class Room {
       throw('constructor have to be initiated with an id')
     }
     this.playlist = []
+    this.indexPlaylist = 0
     this.name = name || 'Crazy Party'
     this.id = id
   }
@@ -20,6 +21,11 @@ class Room {
 
   getFromPlaylist(index) {
     return this.playlist[index]
+  }
+
+  setIndexList(index) {
+    this.indexPlaylist = index
+    return this.indexPlaylist
   }
 }
 
