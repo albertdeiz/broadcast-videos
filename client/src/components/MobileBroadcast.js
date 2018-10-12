@@ -1,6 +1,5 @@
 import React, { Component } from 'react'
 import Proptypes from 'prop-types'
-import Playlist from './Playlist'
 import youtubeSearch from 'youtube-api-v3-search'
 
 class MobileBroadcast extends Component {
@@ -67,7 +66,6 @@ class MobileBroadcast extends Component {
   }
 
   render() {
-    const { room } = this.props
     return (
       <React.Fragment>
         <div className="jumbotron jumbotron-fluid">

@@ -4,12 +4,14 @@ import YoutubePlayer from './../components/YoutubePlayer'
 import MobileBroadcast from './../components/MobileBroadcast'
 import Playlist from './../components/Playlist'
 import { BrowserView, MobileView } from 'react-device-detect'
+import QRCode from 'qrcode'
 
 class Room extends Component {
   constructor(props) {
     super(props)
     this.state = {
-      room: null
+      room: null,
+      linkRoom: `${process.env.REACT_APP_BASE_URL}/room/${this.props.match.params.id}`
     }
 
     this.props.socket.on('playlist:add', playlist => {
@@ -60,7 +62,18 @@ class Room extends Component {
         history.push('/')
       } else {
         this.setState({room})
+        this.drawQr()
       }
+    })
+  }
+
+  drawQr = () => {
+    const canvas = this.refs.qr
+    QRCode.toCanvas(canvas, this.state.linkRoom, err => {
+      if (err) {
+        console.error(err)
+      }
+      console.log('success!')
     })
   }
 
@@ -103,8 +116,12 @@ class Room extends Component {
           <div className="col-12">
             <h1>Room {room ? room.name : ''}</h1>
           </div>
-          <div className="col-12">
+          <div className="col-6">
             <Playlist list={room.playlist} onClickItem={this.setIndexPlaylist}/>
+          </div>
+          <div className="col-6">
+            <canvas ref="qr"></canvas>
+            {this.state.linkRoom}
           </div>
           <div className="col-12">
             <BrowserView>
